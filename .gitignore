@@ -1,0 +1,9 @@
+archive
+Slides
+archive.zip
+.venv-pc-win
+.venv-laptop-win
+*.pyc
+*.log
+*.py
+*pth

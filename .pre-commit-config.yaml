@@ -1,0 +1,12 @@
+repos:
+- repo: https://github.com/nbQA-dev/nbQA
+  rev: 1.9.1
+  hooks:
+    - id: nbqa-mypy
+      args: [--ignore-missing-imports]
+    - id: nbqa-pyupgrade
+      args: [--py37-plus]
+    - id: nbqa-ruff-check
+      args: [--select=I, --fix]
+    - id: nbqa-ruff-format
+
