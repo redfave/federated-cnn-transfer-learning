@@ -1,12 +1,17 @@
 repos:
-- repo: https://github.com/nbQA-dev/nbQA
-  rev: 1.9.1
+-   repo: https://github.com/asottile/pyupgrade
+    rev: v3.19.1
+    hooks:
+    -   id: pyupgrade
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: 'v1.15.0'
+    hooks:
+    -   id: mypy
+        args: [--ignore-missing-imports, --explicit-package-bases]
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.9.10
   hooks:
-    - id: nbqa-mypy
-      args: [--ignore-missing-imports]
-    - id: nbqa-pyupgrade
-      args: [--py37-plus]
-    - id: nbqa-ruff-check
-      args: [--select=I, --fix]
-    - id: nbqa-ruff-format
+    - id: ruff
+      args: [ --fix, --select, I]
+    - id: ruff-format
 
