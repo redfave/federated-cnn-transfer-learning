@@ -142,7 +142,9 @@ def configure_data_sets(source_dataset: Dataset) -> SimpleNamespace:
         **dict(
             zip(
                 ["train", "validation", "test"],
-                random_split(dataset=source_dataset, lengths=[0.6, 0.3, 0.1]),
+                random_split(dataset=source_dataset, lengths=[int(0.6 * len(source_dataset)),
+                                                                  int(0.3 * len(source_dataset)), 
+                                                                  int( 0.1 *len(source_dataset))]),
             )
         )
     )
@@ -153,7 +155,7 @@ def configure_data_loaders(
 ) -> SimpleNamespace:
     data_loader_kwargs = {
         "batch_size": _BATCH_SIZE,
-        "persistent_workers": True,
+        "persistent_workers": True if workers >= 1 or workers is None else False,
         "num_workers": max(2, ((os.cpu_count() or 0) // 2) - 1)
         if workers == None
         else workers,
