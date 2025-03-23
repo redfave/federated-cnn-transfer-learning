@@ -1,5 +1,6 @@
 from torch.utils.data import Subset
 from torchvision.models import VGG
+from util.logging import configure_logging
 
 from transfer_learning import (
     configure_data_loaders,
@@ -12,15 +13,17 @@ from transfer_learning import (
     train,
 )
 
+
 if __name__ == "__main__":
+    LOGGER = configure_logging("overwrite")
     configure_training(batch_size=16, epochs=2)
     model: VGG = get_model()
     full_dataset = get_dataset_complete()
-    mini_set = Subset(
-        dataset=full_dataset, indices=list(range(0, len(full_dataset), 16))
-    )  # test for quicker execution with a smaller subset
-    data_sets = configure_data_sets(mini_set)
-
+    # mini_set = Subset(
+        # dataset=full_dataset, indices=list(range(0, len(full_dataset), 16))
+    # )  # test for quicker execution with a smaller subset
+    # data_sets = configure_data_sets(mini_set)
+    data_sets = configure_data_sets(full_dataset)
     data_loaders = configure_data_loaders(data_sets=data_sets, workers=4)
     model = train(data_loaders, model)
     # model: VGG = restore_model("veggie-net-20250312_123349-2.pth")

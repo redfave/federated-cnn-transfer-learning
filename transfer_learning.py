@@ -8,11 +8,10 @@
 # !jupyter nbconvert --to script .\VGG_transfer_learning.ipynb
 
 
-import io
-import logging
+
 import os
 import random
-import sys
+
 from datetime import datetime
 from types import SimpleNamespace
 from typing import Literal, cast
@@ -27,26 +26,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torchinfo import summary
 from torchvision.datasets import ImageFolder
 from torchvision.models import VGG, VGG19_Weights, vgg19
-
-
-def configure_logging(mode: Literal["a", "w"]) -> logging.Logger:
-    if hasattr(__builtins__, "__IPYTHON__"):  # execution in Jupyter
-        sys.stdout = io.TextIOWrapper(sys.stdout, encoding="utf-8")
-    else:  # execution in CPython
-        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
-
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="%(asctime)s [%(levelname)s] %(threadName)s %(processName)s %(message)s",
-        handlers=[
-            logging.FileHandler(
-                filename=f"veggie-net.log", mode=mode, encoding="utf-8"
-            ),
-            logging.StreamHandler(),
-        ],
-    )
-    return logging.getLogger(__name__)
-
+from util.logging import configure_logging
 
 #
 
@@ -67,7 +47,7 @@ def disablePILDecompressionBombError() -> None:
 # (Nasty to debug runtime errors incoming)
 def worker_init_fn(worker_id: int) -> None:
     disablePILDecompressionBombError()
-    logger = configure_logging("a")  # append on existing log
+    logger = configure_logging("append")
     logger.info(f"Initialized worker {worker_id}")
 
 
@@ -75,7 +55,7 @@ def worker_init_fn(worker_id: int) -> None:
 
 
 # Setup logging before any torch module is imported
-LOGGER = configure_logging("w")  # create (overwrite) new log
+LOGGER = configure_logging("append")  # create (overwrite) new log
 
 _BATCH_SIZE: int | None = None
 _EPOCHS: int | None = None
@@ -471,7 +451,6 @@ def restore_model(model_iteration: str) -> VGG:
         torch.load(os.path.join(".", model_iteration), weights_only=False)
     )
     _MODEL = _MODEL.to(device=get_device())
-    _MODEL.eval()
     return _MODEL
 
 
