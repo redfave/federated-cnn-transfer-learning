@@ -8,10 +8,8 @@
 # !jupyter nbconvert --to script .\VGG_transfer_learning.ipynb
 
 
-
 import os
 import random
-
 from datetime import datetime
 from types import SimpleNamespace
 from typing import Literal, cast
@@ -26,9 +24,9 @@ from torch.utils.tensorboard import SummaryWriter
 from torchinfo import summary
 from torchvision.datasets import ImageFolder
 from torchvision.models import VGG, VGG19_Weights, vgg19
-from util.logging import configure_logging
+from torchvision.transforms import ToPILImage
 
-#
+from util.logging import configure_logging
 
 
 def disablePILDecompressionBombError() -> None:
@@ -59,16 +57,14 @@ LOGGER = configure_logging("append")  # create (overwrite) new log
 
 _BATCH_SIZE: int | None = None
 _EPOCHS: int | None = None
-_TARGET_SET: str | None = None  # target folder inside dataset (archive.zip)
 
 
 def configure_training(
     batch_size: int = 8, epochs: int = 12, target_data_set: str = "Original dataset"
 ) -> None:
-    global _BATCH_SIZE, _EPOCHS, _TARGET_SET
+    global _BATCH_SIZE, _EPOCHS
     _BATCH_SIZE = batch_size
     _EPOCHS = epochs
-    _TARGET_SET = target_data_set  # target folder inside dataset (archive.zip)
 
     custom_seed = np.random.randint(2141403747)
     random.seed(custom_seed)  # apparently seed must be set at several places
@@ -85,10 +81,18 @@ def _init_dataset_complete() -> ImageFolder:
 
 _DATASET_COMPLETE: ImageFolder | None = None
 
+_TARGET_SET: Literal["Original dataset"] | None = (
+    None  # target folder inside dataset (archive.zip)
+)
 
-def get_dataset_complete() -> ImageFolder:
+
+def get_dataset_complete(
+    target_set: Literal["Original dataset"] | None = None,
+) -> ImageFolder:
     global _DATASET_COMPLETE
     if _DATASET_COMPLETE is None:
+        global _TARGET_SET
+        _TARGET_SET = target_set
         _DATASET_COMPLETE = _init_dataset_complete()
 
     return _DATASET_COMPLETE
@@ -122,9 +126,14 @@ def configure_data_sets(source_dataset: Dataset) -> SimpleNamespace:
         **dict(
             zip(
                 ["train", "validation", "test"],
-                random_split(dataset=source_dataset, lengths=[int(0.6 * len(source_dataset)),
-                                                                  int(0.3 * len(source_dataset)), 
-                                                                  int( 0.1 *len(source_dataset))]),
+                random_split(
+                    dataset=source_dataset,
+                    lengths=[
+                        int(0.6 * len(source_dataset)),
+                        int(0.3 * len(source_dataset)),
+                        int(0.1 * len(source_dataset)),
+                    ],
+                ),
             )
         )
     )
@@ -135,7 +144,7 @@ def configure_data_loaders(
 ) -> SimpleNamespace:
     data_loader_kwargs = {
         "batch_size": _BATCH_SIZE,
-        "persistent_workers": True if workers >= 1 or workers is None else False,
+        "persistent_workers": True if workers is None or workers >= 1 else False,
         "num_workers": max(2, ((os.cpu_count() or 0) // 2) - 1)
         if workers == None
         else workers,
@@ -317,7 +326,7 @@ def train(data_loaders: SimpleNamespace, model: VGG) -> VGG:
 
     best_loss_validation = float("inf")
 
-    for epoch in range(cast(int, _EPOCHS) + 1):
+    for epoch in range(1, cast(int, _EPOCHS) + 1):
         model.train(True)
         avg_loss_train = _train_one_epoch(
             model, epoch, optimizer, scheduler, data_loaders, _get_summary_writer()
@@ -454,21 +463,31 @@ def restore_model(model_iteration: str) -> VGG:
     return _MODEL
 
 
-#
+# manual (visual) inspection
+def show_example_images(data_loader_test: DataLoader, model: VGG) -> None:
+    disablePILDecompressionBombError()
 
+    idx_to_class: dict[int, str] = {
+        v: k for k, v in get_dataset_complete().class_to_idx.items()
+    }
 
-# manual (visual) validation
-# from torchvision.transforms import ToPILImage
-# disablePILDecompressionBombError()
+    random_subset_idx = random.randint(0, len(data_loader_test.dataset) - 1)
 
-# idx_to_class = {v: k for k, v in dataset_full.class_to_idx.items()}
+    sample, label = data_loader_test.dataset[random_subset_idx]
+    sample_batch = sample.unsqueeze(0).to(get_device())
 
-# sample, label = data_sets.validation[random.randint(0, len(data_sets.validation) - 1)]
-# sample_batch = sample.unsqueeze(0).to(device)
+    from PIL import Image
 
+    full_dataset = data_loader_test.dataset.dataset
+    full_dataset_idx = data_loader_test.dataset.indices[random_subset_idx]
 
-# ToPILImage()(sample).show()
-# f"Prediction: {idx_to_class[model(sample_batch).argmax().item()]} | Actual Label: {idx_to_class[label]}"
+    sample_path = full_dataset.samples[full_dataset_idx][0]
+
+    Image.open(sample_path).show()
+    # ToPILImage()(sample).show()
+    LOGGER.info(
+        f"Prediction: {idx_to_class[model(sample_batch).argmax().item()]} | Actual Label: {idx_to_class[label]}"
+    )
 
 
 #
