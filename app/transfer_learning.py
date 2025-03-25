@@ -293,16 +293,25 @@ def _train_one_epoch(
 
 
 _TIMESTAMP: str | None = None
-if _TIMESTAMP is None:
-    _TIMESTAMP = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+
+def _get_timestamp() -> str:
+    global _TIMESTAMP
+    if _TIMESTAMP is None:
+        _TIMESTAMP = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return _TIMESTAMP
+
 
 _SUMMARY_WRITER: SummaryWriter | None = None
-if _SUMMARY_WRITER is None:
-    _SUMMARY_WRITER = SummaryWriter(log_dir=f"runs/veggie_trainer_{_TIMESTAMP}")
 
 
 def _get_summary_writer() -> SummaryWriter:
-    return cast(SummaryWriter, _SUMMARY_WRITER)
+    global _SUMMARY_WRITER
+    if _SUMMARY_WRITER is None:
+        _SUMMARY_WRITER = SummaryWriter(
+            log_dir=f"runs/veggie_trainer_{_get_timestamp()}"
+        )
+    return _SUMMARY_WRITER
 
 
 def train(data_loaders: SimpleNamespace, model: VGG) -> VGG:
@@ -377,12 +386,12 @@ def train(data_loaders: SimpleNamespace, model: VGG) -> VGG:
             best_loss_validation = avg_loss_validation
 
             model_path_best_epoch = os.path.join(
-                ".", f"veggie-net-{_TIMESTAMP}-{epoch}.pth"
+                ".", f"veggie-net-{_get_timestamp()}-{epoch}.pth"
             )
             torch.save(model.state_dict(), model_path_best_epoch)
 
             model_path_previous_epoch = os.path.join(
-                ".", f"veggie-net-{_TIMESTAMP}-{epoch - 1}.pth"
+                ".", f"veggie-net-{_get_timestamp()}-{epoch - 1}.pth"
             )
             if os.path.exists(model_path_previous_epoch):
                 os.remove(model_path_previous_epoch)
