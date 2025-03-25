@@ -25,7 +25,7 @@ def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Metrics:
 
 
 if __name__ == "__main__":
-    LOGGER = configure_logging("overwrite")
+    LOGGER = configure_logging(mode="overwrite", role="server")
     fl.server.start_server(
         server_address="0.0.0.0:8080",
         config=fl.server.ServerConfig(

@@ -68,7 +68,7 @@ class FlowerClient(fl.client.NumPyClient):
 
 
 if __name__ == "__main__":
-    LOGGER = configure_logging("append")
+    LOGGER = configure_logging(mode="overwrite", role="client")
     configure_training(
         batch_size=int(APP_CONFIG.get("BATCH_SIZE")), epochs=1
     )  # set epochs to one, as the "epochs" are the rounds configured by the server

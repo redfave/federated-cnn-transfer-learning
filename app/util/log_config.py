@@ -4,7 +4,10 @@ import sys
 from typing import Literal
 
 
-def configure_logging(mode: Literal["append", "overwrite"]) -> logging.Logger:
+def configure_logging(
+    mode: Literal["append", "overwrite"],
+    role: Literal["server", "client", "standalone"],
+) -> logging.Logger:
     if hasattr(__builtins__, "__IPYTHON__"):  # execution in Jupyter
         sys.stdout = io.TextIOWrapper(sys.stdout, encoding="utf-8")
     else:  # execution in CPython
@@ -15,7 +18,7 @@ def configure_logging(mode: Literal["append", "overwrite"]) -> logging.Logger:
         format="%(asctime)s [%(levelname)s] %(threadName)s %(processName)s %(message)s",
         handlers=[
             logging.FileHandler(
-                filename=f"veggie-net.log",
+                filename=f"veggie-net-{role}.log",
                 mode="w" if mode == "overwrite" else "a",
                 encoding="utf-8",
             ),

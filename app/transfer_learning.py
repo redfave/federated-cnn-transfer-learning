@@ -40,14 +40,12 @@ def disablePILDecompressionBombError() -> None:
 # (Nasty to debug runtime errors incoming)
 def worker_init_fn(worker_id: int) -> None:
     disablePILDecompressionBombError()
-    logger = configure_logging("append")
+    logger = configure_logging(mode="append", role="standalone")
     logger.info(f"Initialized worker {worker_id}")
 
 
 # Setup logging before any torch module is imported
-LOGGER = configure_logging(
-    "append"
-)  # append to existing log (relieas on log to be created in some calling module)
+LOGGER = configure_logging(mode="overwrite", role="standalone")
 
 _BATCH_SIZE: int | None = None
 _EPOCHS: int | None = None

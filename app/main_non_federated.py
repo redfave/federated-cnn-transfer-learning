@@ -19,7 +19,7 @@ from app.util.env_loader import APP_CONFIG
 from app.util.log_config import configure_logging
 
 if __name__ == "__main__":
-    LOGGER = configure_logging("overwrite")
+    LOGGER = configure_logging(mode="overwrite", role="standalone")
     configure_training(
         batch_size=int(APP_CONFIG.get("BATCH_SIZE")),
         epochs=int(APP_CONFIG.get("EPOCHS")),
