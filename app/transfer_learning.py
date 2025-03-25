@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # ! pip install -r requirements.txt
 # ! pre-commit install
 # ! pre-commit run --all-files
@@ -26,7 +24,7 @@ from torchvision.datasets import ImageFolder
 from torchvision.models import VGG, VGG19_Weights, vgg19
 from torchvision.transforms import ToPILImage
 
-from util.logging import configure_logging
+from app.util.log_config import configure_logging
 
 
 def disablePILDecompressionBombError() -> None:
@@ -35,9 +33,6 @@ def disablePILDecompressionBombError() -> None:
 
     Image.MAX_IMAGE_PIXELS = None
     ImageFile.LOAD_TRUNCATED_IMAGES = True
-
-
-#
 
 
 # Needs to be here at top (before imports)
@@ -49,11 +44,10 @@ def worker_init_fn(worker_id: int) -> None:
     logger.info(f"Initialized worker {worker_id}")
 
 
-#
-
-
 # Setup logging before any torch module is imported
-LOGGER = configure_logging("append")  # create (overwrite) new log
+LOGGER = configure_logging(
+    "append"
+)  # append to existing log (relieas on log to be created in some calling module)
 
 _BATCH_SIZE: int | None = None
 _EPOCHS: int | None = None
@@ -440,19 +434,7 @@ def test(data_test: DataLoader, model: VGG):
     return avg_loss_test, avg_accuracy_test
 
 
-#
-
-
-# # if __name__ == "__main__":
-# train()
-# model.load_state_dict(torch.load(model_path_best_epoch, map_location=device)) # load best performing model (might be from a previous epoch)
-# test()
-
-
-#
-
-
-# # Load a previously trained model manually
+# Load a previously trained model manually
 def restore_model(model_iteration: str) -> VGG:
     global _MODEL
     _MODEL = _configure_model()
@@ -484,13 +466,9 @@ def show_example_images(data_loader_test: DataLoader, model: VGG) -> None:
     sample_path = full_dataset.samples[full_dataset_idx][0]
 
     Image.open(sample_path).show()
-    # ToPILImage()(sample).show()
     LOGGER.info(
         f"Prediction: {idx_to_class[model(sample_batch).argmax().item()]} | Actual Label: {idx_to_class[label]}"
     )
-
-
-#
 
 
 # usage: https://pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html

@@ -2,6 +2,7 @@ archive
 Slides
 archive.zip
 .venv-pc-win
+.venv
 .venv-laptop-win
 *.pyc
 *pth

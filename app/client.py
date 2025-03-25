@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import os
 from collections import OrderedDict
 from types import SimpleNamespace
@@ -8,7 +10,7 @@ import numpy as np
 from torch import tensor
 from torchvision.models import VGG
 
-from transfer_learning import (
+from app.transfer_learning import (
     configure_data_loaders,
     configure_data_sets,
     configure_training,
@@ -17,7 +19,8 @@ from transfer_learning import (
     test,
     train,
 )
-from util.logging import configure_logging
+from app.util.env_loader import APP_CONFIG
+from app.util.log_config import configure_logging
 
 os.environ["FLWR_LOG_LEVEL"] = "DEBUG"
 os.environ["GRPC_VERBOSITY"] = "DEBUG"
@@ -67,16 +70,21 @@ class FlowerClient(fl.client.NumPyClient):
 if __name__ == "__main__":
     LOGGER = configure_logging("append")
     configure_training(
-        batch_size=8, epochs=1
+        batch_size=int(APP_CONFIG.get("BATCH_SIZE")), epochs=1
     )  # set epochs to one, as the "epochs" are the rounds configured by the server
     _MODEL: VGG = get_model()
     _DATA_SETS: SimpleNamespace = configure_data_sets(
-        get_dataset_complete(target_set="Original dataset")
+        get_dataset_complete(target_set=APP_CONFIG.get("TARGET_SET"))
     )
-    _DATA_LOADERS = configure_data_loaders(data_sets=_DATA_SETS, workers=None)
+    _DATA_LOADERS = configure_data_loaders(
+        data_sets=_DATA_SETS,
+        workers=int(APP_CONFIG.get("WORKERS_NUM"))
+        if APP_CONFIG.get("WORKERS_NUM") is not None
+        else None,
+    )
     _CLIENT = FlowerClient(model=_MODEL, data_loaders=_DATA_LOADERS).to_client()
     fl.client.start_client(
-        server_address="localhost:8080",
+        server_address=APP_CONFIG.get("SERVER_CONNECTION_STRING"),
         client=_CLIENT,
         grpc_max_message_length=1024**3,
         max_wait_time=60.0,

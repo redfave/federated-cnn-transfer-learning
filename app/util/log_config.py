@@ -1,7 +1,8 @@
+import io
 import logging
 import sys
-import io
 from typing import Literal
+
 
 def configure_logging(mode: Literal["append", "overwrite"]) -> logging.Logger:
     if hasattr(__builtins__, "__IPYTHON__"):  # execution in Jupyter
@@ -15,8 +16,8 @@ def configure_logging(mode: Literal["append", "overwrite"]) -> logging.Logger:
         handlers=[
             logging.FileHandler(
                 filename=f"veggie-net.log",
-                mode="w" if mode == "overwrite" else "a", 
-                encoding="utf-8"
+                mode="w" if mode == "overwrite" else "a",
+                encoding="utf-8",
             ),
             logging.StreamHandler(),
         ],
