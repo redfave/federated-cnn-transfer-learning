@@ -2,7 +2,6 @@
 # ! pre-commit install
 # ! pre-commit run --all-files
 
-
 # !jupyter nbconvert --to script .\VGG_transfer_learning.ipynb
 
 

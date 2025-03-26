@@ -21,6 +21,7 @@ from app.transfer_learning import (
 )
 from app.util.env_loader import APP_CONFIG
 from app.util.log_config import configure_logging
+from app.util.partitioning import partition_dataset
 
 os.environ["FLWR_LOG_LEVEL"] = "DEBUG"
 os.environ["GRPC_VERBOSITY"] = "DEBUG"
@@ -76,6 +77,13 @@ if __name__ == "__main__":
     _DATA_SETS: SimpleNamespace = configure_data_sets(
         get_dataset_complete(target_set=APP_CONFIG.get("TARGET_SET"))
     )
+    _DATA_SETS.train = partition_dataset(
+        source_dataset=_DATA_SETS.train, client_id=int(APP_CONFIG.get("CLIENT_ID"))
+    )
+    _DATA_SETS.validation = partition_dataset(
+        source_dataset=_DATA_SETS.validation, client_id=int(APP_CONFIG.get("CLIENT_ID"))
+    )
+
     _DATA_LOADERS = configure_data_loaders(
         data_sets=_DATA_SETS,
         workers=int(APP_CONFIG.get("WORKERS_NUM"))
